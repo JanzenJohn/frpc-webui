@@ -1,4 +1,4 @@
-use std::{collections::HashMap, hash::Hash, vec};
+use std::{collections::HashMap, fs::read_to_string, hash::Hash, vec};
 
 use ini::{Ini, Properties};
 use serde::{Deserialize, Serialize};
@@ -25,7 +25,12 @@ pub struct PortForward {
 }
 
 pub async fn load_config() -> Result<Config, crate::Error> {
-    let config: toml::Table = match toml::from_str(include_str!("../frpc.toml")) {
+    let config: toml::Table = match toml::from_str(
+        tokio::fs::read_to_string("./frpc.toml")
+            .await
+            .unwrap()
+            .as_str(),
+    ) {
         Ok(v) => v,
         Err(e) => {
             println!("Error: {}", e);

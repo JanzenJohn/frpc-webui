@@ -43,6 +43,28 @@ export function removePortApi(name: string): Promise<boolean> {
 	});
 }
 
+export function updatePortApi(port: Port): Promise<boolean> {
+	return new Promise<boolean>(async (resolve, reject) => {
+		fetch(`/api/ports/${port.name}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(port)
+		})
+			.then((r) => {
+				if (r.status === 203) {
+					resolve(true);
+				} else {
+					resolve(false);
+				}
+			})
+			.catch((e) => {
+				resolve(false);
+			});
+	});
+}
+
 export function createPortApi(port: Port): Promise<boolean> {
 	return new Promise<boolean>(async (resolve, reject) => {
 		fetch(`/api/ports/${port.name}`, {

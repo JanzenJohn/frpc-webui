@@ -1,3 +1,5 @@
+
+
 <script lang="ts">
 	import type { Port } from '$lib/ports';
 	import { createEventDispatcher } from 'svelte';
@@ -8,25 +10,37 @@
 	function removePort(name: string) {
 		dispatch('remove', name);
 	}
+	function updatePort(port: Port) {
+		dispatch('update', port);
+	}
 </script>
 
 <div class="wrapper">
 	<div class="top g">
-		<span class="name">{port.name}</span>
-		<span>{port.forward_type}</span>
-		<button on:click={() => removePort(port.name)}>X</button>
+		<div class="left-content">
+			<input class="name" bind:value={port.name}>
+		</div>
+
+		<div class="right-content">
+			<select bind:value={port.forward_type}>
+				<option value="Tcp">TCP</option>
+				<option value="Udp">UDP</option>
+			</select>
+			<button on:click={() => removePort(port.name)}>X</button>
+			<button on:click={() => updatePort(port)}>💾</button>
+		</div>
 	</div>
 	<div class="divider"></div>
 	<div class="bottom g">
-		<span>remote: {port.remote_port}</span>
+		<span>VPS: <input type="number" bind:value={port.remote_port}></span>
 		<span> ➤ </span>
-		<span>local: {port.local_port}</span>
+		<span>LOCAL: <input type="number" bind:value={port.local_port}></span>
 	</div>
 </div>
 
 <style>
 	.wrapper {
-		width: 200px;
+		width: fit-content;
 		padding: 20px;
 		margin: 10px;
 		background-color: antiquewhite;
@@ -42,5 +56,8 @@
 		display: flex;
 		justify-content: space-between;
 		text-align: center;
+	}
+	input[type="number"]  {
+		width: 60px;
 	}
 </style>

@@ -36,16 +36,20 @@ async fn main() {
         frpc: None,
         config: config::load_config().await.unwrap(),
     }));
+    start_deamon(state.clone()).await.ok();
 
     let router = Router::new()
         .route("/api/ports", get(root))
-        .route("/api/ports/:name", delete(delete_port).post(add_port))
+        .route(
+            "/api/ports/:name",
+            delete(delete_port).post(add_port).put(change_port),
+        )
         .route("/api/status", get(status))
         .route("/api/restart", get(start_daemon_web))
         .route("/api/stop", get(stop_deamon_web))
         .with_state(state);
 
-    let listener = TcpListener::bind("0.0.0.0:4000").await.unwrap();
+    let listener = TcpListener::bind("127.0.0.1:4000").await.unwrap();
 
     println!("http://localhost:4000/");
     axum::serve(listener, router.into_make_service())
@@ -90,6 +94,36 @@ async fn add_port(
     let mut resp = Response::new("Port added".into());
     *resp.status_mut() = StatusCode::CREATED;
     resp
+}
+
+async fn change_port(
+    State(state): State<Arc<Mutex<AppState>>>,
+    Path(path_infos): Path<PortPath>,
+    Json(port): Json<PortForward>,
+) -> Response {
+    let mut lock = state.lock().await;
+    println!("changing port {}", path_infos.name);
+
+    match lock
+        .config
+        .forward_ports
+        .entry(path_infos.name.clone())
+        .and_modify(|e| {
+            *e = port.clone();
+        }) {
+        std::collections::hash_map::Entry::Occupied(_) => {
+            println!("Port changed");
+            let mut resp = Response::new("Port changed".into());
+            *resp.status_mut() = StatusCode::CREATED;
+            resp
+        }
+        std::collections::hash_map::Entry::Vacant(_) => {
+            println!("Port not found");
+            let mut resp = Response::new("Port not found".into());
+            *resp.status_mut() = StatusCode::NOT_FOUND;
+            resp
+        }
+    }
 }
 
 async fn status(State(state): State<Arc<Mutex<AppState>>>) -> Json<bool> {

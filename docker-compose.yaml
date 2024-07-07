@@ -1,0 +1,6 @@
+services:
+  web:
+    build: .
+    volumes:
+      - ./frpc.toml:/app/frpc.toml
+    network_mode: host
